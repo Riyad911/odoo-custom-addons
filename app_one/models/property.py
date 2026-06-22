@@ -11,6 +11,8 @@ class Property(models.Model):
     description = fields.Text(tracking=1)
     postcode = fields.Char()
     date_availability = fields.Date(tracking=1)
+    expected_selling_date = fields.Date(tracking=1)
+    is_late = fields.Boolean()
     expected_price = fields.Float()
     selling_price = fields.Float()
     different = fields.Float(compute='_compute_diff', store=1, readonly=0)
@@ -20,6 +22,8 @@ class Property(models.Model):
     garage = fields.Boolean()
     garden = fields.Boolean()
     garden_area = fields.Integer()
+    #To allow make archive for record without delete it.
+    active = fields.Boolean(default=True)
 
     garden_orientation = fields.Selection([
         ('north', 'North'),  # First value is stored in the database, second is shown to the user
@@ -40,6 +44,7 @@ class Property(models.Model):
         ('draft', 'Draft'),
         ('pending', 'Pending'),
         ('sold', 'Sold'),
+        ('closed', 'Closed'),
     ], default="draft")
 
 # Validation in database
@@ -87,6 +92,18 @@ class Property(models.Model):
         for rec in self:
             print("function sold is work")
             rec.state = 'sold'
+
+    def action_closed(self):
+        for rec in self:
+            print("function closed is work")
+            rec.state = 'closed'
+
+    def check_expected_selling_date(self):
+        property_ids = self.search([])
+        for rec in property_ids:
+            if rec.expected_selling_date and rec.expected_selling_date < fields.date.today():
+                rec.is_late = True
+
 
     '''
     #CRUD
